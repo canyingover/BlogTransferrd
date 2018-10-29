@@ -1,2 +1,2 @@
 # BlogTransferrd
-Transfer the hexo blog because forgetting the account of namecheap
+Transfer the hexo blogs because forgetting the account of namecheap
