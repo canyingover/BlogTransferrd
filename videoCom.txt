@@ -1,0 +1,59 @@
+import numpy as np
+from skimage import transform as tf
+from moviepy.editor import *
+from moviepy.video.tools.drawing import color_gradient
+import codecs
+from aip import AipSpeech
+
+
+# 根据文本合成音频
+def composite_audio(txt_file_path,audio_file_path):
+    with codecs.open(txt_file_path,"r",encoding="utf-8") as f:
+        text = f.read()
+
+
+    APP_ID = '20294533'
+    API_KEY = 'h8pWQF9UFNGfA8j6GGedVlYR'
+    SECRET_KEY = 'VzazcYzkBVKvX9hO2WHDeMYmeqVvocY1'
+    client = AipSpeech(APP_ID, API_KEY, SECRET_KEY)
+
+    result  = client.synthesis(text, 'zh', 4, {
+        'vol': 5,
+    })
+    
+    # 识别正确返回语音二进制 错误则返回dict 参照下面错误码
+    if not isinstance(result, dict):
+        with open(audio_file_path, 'wb') as f:
+            f.write(result)
+
+import codecs
+
+txt_file_path = u"E:/CompositeVideo/text/test1.txt"
+audio_file_path = u"E:/CompositeVideo/audio/test1.mp3"
+video_file_path = u"E:/CompositeVideo/video/out.avi"
+
+composite_audio(txt_file_path,audio_file_path)
+video_clip_1 = VideoFileClip(video_file_path).subclip(0,10) 
+audio_clip_1 = AudioFileClip(audio_file_path).set_duration(10)
+
+items = []
+t0 = 0
+t = 0
+with codecs.open(txt_file_path,"r",encoding="utf-8") as f:
+    for line_index,line in enumerate(f):
+        for word_index,word in enumerate(line.strip()):
+            sentence,start,span = word,(t0+t)*0.25,30
+            #print(sentence,start,span,(100+(word_index+1)*60,100*(line_index+1)))
+            
+            txt = TextClip(sentence,fontsize=50,align=='center',color='red',font='SimHei')\
+            .set_position((350+(word_index+1)*50,200+60*(line_index+1)))\
+            .set_duration(span)\
+            .set_start(start)
+            items.append(txt)
+            t += 1
+
+            
+items.insert(0,video_clip_1)
+
+video = CompositeVideoClip(items, size=(1920, 1080)).set_audio(audio_clip_1)
+video.write_videofile("E:/CompositeVideo/my_stack.mp4",audio_codec="aac")
